@@ -19,8 +19,8 @@ I have included some idiosyncratic projections in the software. They are as foll
 * Walker I (lenticular), shape-favoring, designed after the "common/classic image of a world map" via the proxy of the common features of AI-generated images of "world maps"
 * Walker II (lenticular), area-favoring, intended to be part of the same 'family' of projections as Walker I
 
-* Walker pseudoequivalent (cylindrical), area-favoring, approximates Gall-Peters away from the poles but reduces shape distortion at the cost of imperfect area preservation
-* Walker pseudoconformal (cylindrical), shape-favoring, approximates Mercator away from the poles but has finite poles, and thus only preserves shape imperfectly. Best presented with a vertical stretch of about 1.3257.
+* Walker pseudoequivalent (cylindrical), area-favoring, approximates Gall-Peters away from the poles but reduces shape distortion at the cost of imperfect area preservation Best presented with a vertical stretch of about 1.3257.
+* Walker pseudoconformal (cylindrical), shape-favoring, approximates Mercator away from the poles but has finite poles, and thus only preserves shape imperfectly. 
 
 * Majestaz (cylindrical), shape-favoring, approximates Mercator near the equator with a 3rd-degree polynomial and is therefore easy to compute. Devised by my friend Majestaz.
 
