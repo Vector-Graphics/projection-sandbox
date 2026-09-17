@@ -1,0 +1,3395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Projection Sandbox</title>
+
+<style>
+/* ============================================================
+   GENERIC VIBE-CODED WEBSITE™
+   dark mode / blue-purple gradient / glass / glow / rounded
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+    --bg: #070812;
+    --bg-secondary: #0c0d1a;
+    --panel: rgba(18, 20, 38, 0.72);
+    --panel-solid: #111322;
+
+    --text: #f4f5ff;
+    --muted: #9297b5;
+    --subtle: #666b89;
+
+    --blue: #5b8cff;
+    --blue-bright: #72a7ff;
+    --purple: #9b6cff;
+    --pink: #c77dff;
+
+    --border: rgba(255, 255, 255, 0.09);
+    --border-bright: rgba(125, 145, 255, 0.28);
+
+    --shadow:
+        0 20px 60px rgba(0, 0, 0, 0.45);
+
+    --glow:
+        0 0 35px rgba(91, 140, 255, 0.18),
+        0 0 80px rgba(155, 108, 255, 0.10);
+
+    --gradient:
+        linear-gradient(
+            135deg,
+            #5b8cff 0%,
+            #7b6cff 45%,
+            #b56cff 100%
+        );
+
+    --gradient-text:
+        linear-gradient(
+            90deg,
+            #72a7ff,
+            #a879ff,
+            #d28cff
+        );
+}
+
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background: var(--bg);
+}
+
+body {
+    position: relative;
+
+    min-height: 100vh;
+    margin: 0;
+    padding: 40px;
+
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 15% 10%,
+            rgba(72, 105, 255, 0.16),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 20%,
+            rgba(166, 92, 255, 0.15),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 50% 100%,
+            rgba(49, 84, 255, 0.08),
+            transparent 35%
+        ),
+        var(--bg);
+
+    overflow-x: hidden;
+}
+.app {
+    width: 100%;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+/* Giant decorative blurred blobs.
+   Because apparently websites aren't allowed to just
+   have a background anymore. */
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+
+    width: 420px;
+    height: 420px;
+
+    border-radius: 50%;
+
+    filter: blur(100px);
+
+    opacity: 0.13;
+
+    pointer-events: none;
+
+    z-index: -1;
+}
+
+body::before {
+    top: -180px;
+    left: -120px;
+
+    background: #4169ff;
+}
+
+body::after {
+    right: -150px;
+    bottom: -180px;
+
+    background: #a24dff;
+}
+
+
+/* ============================================================
+   Main heading
+   ============================================================ */
+
+h1 {
+    margin: 0 0 11px;
+    text-align: center;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.05;
+
+    font-weight: 800;
+    letter-spacing: -0.045em;
+
+    background: var(--gradient-text);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    filter:
+        drop-shadow(0 0 25px rgba(108, 125, 255, 0.22));
+}
+
+hr {
+    height: 1px;
+    margin: 28px 0;
+
+    border: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(91, 140, 255, 0.15) 20%,
+            rgba(91, 140, 255, 0.65) 45%,
+            rgba(155, 108, 255, 0.8) 50%,
+            rgba(199, 125, 255, 0.65) 55%,
+            rgba(155, 108, 255, 0.15) 80%,
+            transparent 100%
+        );
+
+    box-shadow:
+        0 0 15px rgba(91, 140, 255, 0.15),
+        0 0 35px rgba(155, 108, 255, 0.08);
+}
+
+
+/* ============================================================
+   Controls
+   ============================================================ */
+
+.row {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto 18px;
+}
+
+
+/* ============================================================
+   Generic controls
+   ============================================================ */
+
+button,
+input,
+select {
+    font-family: inherit;
+    font-size: 14px;
+}
+
+button,
+select,
+input[type="file"] {
+    color: var(--text);
+
+    background:
+        rgba(255, 255, 255, 0.045);
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 10px;
+
+    padding: 10px 14px;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 8px 24px rgba(0, 0, 0, 0.18);
+
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+button {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+button:hover,
+select:hover,
+input[type="file"]:hover {
+    transform: translateY(-1px);
+
+    border-color: var(--border-bright);
+
+    background:
+        rgba(255, 255, 255, 0.075);
+
+    box-shadow:
+        0 8px 30px rgba(74, 100, 255, 0.14);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+
+/* Make the main action look suspiciously important. */
+
+#renderButton {
+    color: white;
+
+    border: none;
+
+    background: var(--gradient);
+
+    box-shadow:
+        0 8px 28px rgba(91, 108, 255, 0.30),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+#renderButton:hover {
+    box-shadow:
+        0 10px 38px rgba(91, 108, 255, 0.42),
+        0 0 30px rgba(155, 108, 255, 0.18);
+}
+
+
+/* Reverse projection gets the obligatory
+   "AI-powered premium feature" treatment. */
+
+#renderInverseBtn {
+    border-color: rgba(155, 108, 255, 0.28);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(91, 140, 255, 0.10),
+            rgba(155, 108, 255, 0.13)
+        );
+}
+
+/* ============================================================
+   Styled dropdowns
+   ============================================================ */
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+
+    min-width: 110px;
+    padding: 9px 38px 9px 12px;
+
+    color: var(--text);
+
+    background-color: rgba(255, 255, 255, 0.045);
+
+    border: 1px solid var(--border);
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    /* Dropdown arrow */
+    background-image:
+        linear-gradient(45deg, transparent 50%, #aeb5d8 50%),
+        linear-gradient(135deg, #aeb5d8 50%, transparent 50%);
+
+    background-position:
+        calc(100% - 17px) 50%,
+        calc(100% - 12px) 50%;
+
+    background-size:
+        5px 5px,
+        5px 5px;
+
+    background-repeat: no-repeat;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 6px 18px rgba(0, 0, 0, 0.16);
+
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+select:hover {
+    transform: translateY(-1px);
+
+    border-color: var(--border-bright);
+
+    background-color: rgba(255, 255, 255, 0.075);
+
+    box-shadow:
+        0 8px 26px rgba(74, 100, 255, 0.14);
+}
+
+select:focus {
+    outline: none;
+
+    border-color:
+        rgba(111, 139, 255, 0.65);
+
+    box-shadow:
+        0 0 0 3px rgba(91, 140, 255, 0.10),
+        0 0 22px rgba(91, 140, 255, 0.08);
+}
+
+select option {
+    color: var(--text);
+    background: var(--panel-solid);
+}
+/* ============================================================
+   File input
+   ============================================================ */
+
+input[type="file"] {
+    max-width: 280px;
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button {
+    margin-right: 10px;
+
+    padding: 7px 11px;
+
+    color: white;
+
+    border: 0;
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #526fff,
+            #865eea
+        );
+
+    font-family: inherit;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   Code editor panels
+   ============================================================ */
+
+.controls {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(320px, 1fr)
+        );
+
+    gap: 18px;
+
+    margin-bottom: 20px;
+}
+
+
+/* Individual editor card */
+
+.controls > div {
+    position: relative;
+
+    padding: 18px;
+
+    border-radius: 16px;
+
+    border: 1px solid var(--border);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(24, 27, 51, 0.82),
+            rgba(12, 14, 29, 0.72)
+        );
+
+    box-shadow:
+        var(--shadow),
+        var(--glow);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    overflow: hidden;
+}
+
+
+/* Decorative gradient line across cards */
+
+.controls > div::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 10%;
+    right: 10%;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(111, 145, 255, 0.8),
+            rgba(177, 112, 255, 0.8),
+            transparent
+        );
+}
+
+
+label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #e9eaff;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    letter-spacing: 0.015em;
+}
+
+/* Code labels get a tiny "terminal" flavor */
+
+.controls label::before {
+    content: "⌘ ";
+
+    color: var(--purple);
+
+    font-weight: 800;
+}
+
+input[type="number"] {
+    appearance: none;
+    width: 100px;
+    padding: 10px 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.07),
+            rgba(255, 255, 255, 0.025)
+        );
+    color: #f4f4ff;
+
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+
+    outline: none;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 4px 18px rgba(0, 0, 0, 0.15);
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+input[type="number"]:hover {
+    border-color: rgba(140, 120, 255, 0.35);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.09),
+            rgba(255, 255, 255, 0.035)
+        );
+}
+
+input[type="number"]:focus {
+    border-color: rgba(140, 120, 255, 0.75);
+    box-shadow:
+        0 0 0 3px rgba(120, 100, 255, 0.12),
+        0 0 18px rgba(120, 100, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+textarea {
+    width: 100%;
+    height: 180px;
+
+    box-sizing: border-box;
+
+    resize: vertical;
+
+    padding: 14px;
+
+    color: #dfe4ff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(5, 7, 17, 0.96),
+            rgba(10, 11, 25, 0.94)
+        );
+
+    border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    border-radius: 11px;
+
+    outline: none;
+
+    font-family:
+        "SFMono-Regular",
+        "Cascadia Code",
+        "Roboto Mono",
+        Consolas,
+        monospace;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    box-shadow:
+        inset 0 2px 12px rgba(0, 0, 0, 0.35);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+textarea:focus {
+    border-color:
+        rgba(111, 139, 255, 0.65);
+
+    box-shadow:
+        0 0 0 3px rgba(91, 140, 255, 0.10),
+        0 0 25px rgba(91, 140, 255, 0.08),
+        inset 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+textarea::selection {
+    background: rgba(117, 101, 255, 0.45);
+}
+
+
+/* ============================================================
+   Hint text
+   ============================================================ */
+
+.hint {
+    margin-top: 9px;
+    text-align: center;
+    color: var(--muted);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.hint::before {
+    content: "✦ ";
+
+    color: var(--blue-bright);
+}
+
+
+/* ============================================================
+   Options
+   ============================================================ */
+
+.options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    justify-content: center; 
+    width: fit-content;
+    margin: 20px auto;
+
+    padding: 14px 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    background: rgba(17, 19, 35, 0.68);
+
+    box-shadow:
+        0 12px 35px rgba(0, 0, 0, 0.22);
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.options label {
+    display: inline-flex;
+
+    align-items: center;
+
+    margin: 0;
+
+    color: #cfd2e8;
+
+    font-weight: 500;
+}
+
+.options label::before {
+    content: none;
+}
+
+.options select {
+    margin-left: 5px;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    min-height: 18px;
+
+    margin: 0 7px 0 0;
+    padding: 0;
+
+    flex: 0 0 18px;
+    align-self: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 5px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    cursor: pointer;
+
+    display: grid;
+    place-items: center;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+input[type="checkbox"]:checked {
+    border-color: transparent;
+
+    background:
+        linear-gradient(
+            135deg,
+            #5b8cff,
+            #a06cff
+        );
+
+    box-shadow:
+        0 0 15px rgba(103, 117, 255, 0.35);
+}
+
+input[type="checkbox"]:checked::after {
+    content: "✓";
+
+    color: white;
+
+    font-size: 12px;
+    line-height: 1;
+
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   Status
+   ============================================================ */
+
+#status {
+    min-height: 22px;
+
+    margin: 12px 2px;
+
+    color: #aeb5d8;
+
+    font-size: 13px;
+    text-align: center;
+    transition: color 0.2s ease;
+}
+
+#status:not(:empty)::before {
+    content: "● ";
+
+    color: #6e8fff;
+
+    text-shadow:
+        0 0 10px rgba(110, 143, 255, 0.8);
+}
+
+
+/* ============================================================
+   Canvas
+   ============================================================ */
+
+#canvasContainer {
+  position: relative;
+
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+
+    overflow: auto;
+
+    padding: 8px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(13, 15, 29, 0.92),
+            rgba(6, 8, 17, 0.96)
+        );
+
+    border:
+        1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow:
+        var(--shadow),
+        0 0 70px rgba(72, 91, 255, 0.07);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+#canvasContainer::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 15%;
+    right: 15%;
+
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(104, 138, 255, 0.65),
+            rgba(178, 107, 255, 0.65),
+            transparent
+        );
+
+    pointer-events: none;
+}
+
+canvas {
+    display: block;
+
+    max-width: none;
+
+    image-rendering: auto;
+
+    border-radius: 10px;
+
+    box-shadow:
+        0 4px 25px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ============================================================
+   Scrollbars
+   ============================================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #526fff,
+            #8a5eea
+        );
+
+    border:
+        2px solid #0b0d19;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:
+        linear-gradient(
+            180deg,
+            #6d8bff,
+            #a070ff
+        );
+}
+
+
+/* ============================================================
+   Disabled state
+   ============================================================ */
+
+button:disabled {
+    cursor: wait;
+
+    opacity: 0.45;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    body {
+        padding: 22px;
+    }
+
+    h1 {
+        font-size: 32px;
+         
+    }
+
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    .controls > div {
+        padding: 14px;
+    }
+
+    .row {
+          display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    margin-bottom: 18px;
+    }
+
+    .row button,
+    .row input[type="file"] {
+        width: 100%;
+        max-width: none;
+    }
+
+    .options {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+
+/* ============================================================
+   Selection
+   ============================================================ */
+
+::selection {
+    color: white;
+
+    background:
+        linear-gradient(
+            90deg,
+            #5b8cff,
+            #9b6cff
+        );
+}
+</style>
+</head>
+
+<body>
+<div class="app"> 
+<h1>Projection Sandbox</h1>
+<div class="hint">Explore, transform, and visualize geographic projections</div>
+<hr>
+<div class="row">
+    <input type="file" id="imageInput" accept="image/*">
+
+    <button id="renderButton">Render</button>
+    <button id="saveButton">Export PNG</button>
+    <button id="renderInverseBtn">Reverse projection</button>
+</div>
+
+<div class="controls">
+
+    <div>
+        <label for="xCode">X Coordinate Function</label>
+        <textarea id="xCode">return lambda;</textarea>
+        <div class="hint">
+            <code>lambda</code> = longitude in radians, <code>phi</code> = latitude in radians. <br> 
+            Full JavaScript is allowed. Do not paste arbitrary code in here.
+        </div>
+    </div>
+
+    <div>
+        <label for="yCode">Y Coordinate Function</label>
+        <textarea id="yCode">return phi;</textarea>
+        <div class="hint">
+            Example: <code>if (phi &gt; 0) return phi; else return phi * 0.8;</code> <br>
+            You don't need to prefix everything with <code>Math.</code><br>
+            Full JavaScript is allowed. Do not paste arbitrary code in here.
+        </div>
+    </div>
+
+</div>
+
+<div class="options">
+
+<label>
+    Output resolution:&nbsp;
+    <input
+        type="number"
+        id="resolution"
+        value="640"
+        min="64"
+        max="8192"
+        step="1"
+    >
+    px
+</label>
+<label>
+    Graticules:&nbsp;
+    <input
+        type="number"
+        id="ngraticule"
+        value="6"
+        min="1"
+        max="90"
+        step="1"
+    >
+    
+</label>
+    <label>
+    Solver quality:&nbsp;
+    <input type="number" id="coarseNx" value="180" min="10" max="1000" step="10">
+    </label>
+    <label>
+    Preset:&nbsp;
+    <select id="preset">
+        <option value="">Custom</option>
+        <option value="equirectangular">Equirectangular</option>
+        <option value="mercator">Mercator</option>
+        <option value="pseudoconformal">Walker pseudoconformal</option>
+        <option value="pseudoequivalent">Walker pseudoequivalent</option>
+
+        <option value="majestaz">Majestaz</option>
+        <option value="miller">Miller cylindrical</option>
+                <option value="equalcylindrical">Equal-area cylindrical</option>
+        <option value="sinusoidal">Sinusoidal</option>
+        <option value="equalearth">Equal Earth</option>
+        <option value="mollweide">Mollweide</option>
+                <option value="fpmw">FPMW</option>
+                        <option value="azequidist">Azimuthal equidistant</option>
+        <option value="hammer">Hammer</option>
+                        <option value="walker1">Walker I</option>
+                 <option value="walker2">Walker II</option>
+    </select>
+</label>
+
+    <label>
+        <input type="checkbox" id="graticule" checked>
+        Show graticule
+    </label>
+
+    <label>
+        <input type="checkbox" id="tissot">
+        Show distortion
+    </label>
+
+</div>
+
+<div id="status"></div>
+
+<div id="canvasContainer">
+    <canvas id="canvas"></canvas>
+</div>
+<hr>
+<div class="hint">Code primarily generated using ChatGPT because I just could not be bothered </div>
+</div>
+<script>
+
+// ============================================================
+// FAST INVERSE RENDERER
+// ============================================================
+//
+// Strategy:
+//
+// 1. Sample the user's forward projection on a coarse grid.
+// 2. Put those samples into a spatial lookup structure.
+// 3. For every output pixel, use the nearest coarse sample
+//    as the initial (lambda, phi) guess.
+// 4. Refine that guess with Newton-Raphson.
+// 5. Sample the original equirectangular image.
+//
+// This is much closer to how a real projection renderer works:
+// the expensive part is solving the inverse transformation,
+// not searching the entire source image for every pixel.
+// ============================================================
+
+let sourceImage = null;
+let rendering = false;
+
+let projectionMinX = 0;
+let projectionMaxX = 0;
+let projectionMinY = 0;
+let projectionMaxY = 0;
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+const imageInput = document.getElementById("imageInput");
+const renderButton = document.getElementById("renderButton");
+const saveButton = document.getElementById("saveButton");
+const resetButton = document.getElementById("resetButton");
+
+const xCode = document.getElementById("xCode");
+const yCode = document.getElementById("yCode");
+
+const resolution = document.getElementById("resolution");
+const graticule = document.getElementById("graticule");
+const tissot = document.getElementById("tissot");
+const preset = document.getElementById("preset");
+const status = document.getElementById("status");
+document.getElementById("renderInverseBtn").addEventListener("click", renderInverseToEquirectangular);
+
+
+// ============================================================
+// Image loading
+// ============================================================
+
+imageInput.addEventListener("change", event => {
+
+    const file = event.target.files[0];
+
+    if (!file) return;
+
+    const img = new Image();
+
+    img.onload = () => {
+
+        sourceImage = img;
+
+        status.textContent =
+            `Loaded ${img.width} × ${img.height} image.`;
+    };
+
+    img.src = URL.createObjectURL(file);
+});
+
+
+// ============================================================
+// Compile projection
+// ============================================================
+
+function preprocessProjectionCode(code) {
+
+    const mathNames = [
+        "abs",
+        "acos",
+        "acosh",
+        "asin",
+        "asinh",
+        "atan",
+        "atan2",
+        "atanh",
+        "cbrt",
+        "ceil",
+        "clz32",
+        "cos",
+        "cosh",
+        "exp",
+        "expm1",
+        "floor",
+        "fround",
+        "hypot",
+        "imul",
+        "log",
+        "log10",
+        "log1p",
+        "log2",
+        "max",
+        "min",
+        "pow",
+        "random",
+        "round",
+        "sign",
+        "sin",
+        "sinh",
+        "sqrt",
+        "tan",
+        "tanh",
+        "trunc",
+        "E",
+        "LN10",
+        "LN2",
+        "LOG10E",
+        "LOG2E",
+        "PI",
+        "SQRT1_2",
+        "SQRT2"
+    ];
+
+    /*
+        Only replace names that aren't already preceded
+        by a dot.
+
+        So:
+
+            sin(phi)
+            Math.sin(phi)
+
+        both work without becoming:
+
+            Math.Math.sin(phi)
+    */
+
+    for (const name of mathNames) {
+
+        const regex =
+            new RegExp(
+                `(?<![.\\w$])${name}\\b`,
+                "g"
+            );
+
+        code =
+            code.replace(
+                regex,
+                `Math.${name}`
+            );
+    }
+
+    return code;
+}
+
+function compileProjection() {
+
+    let xFunction;
+    let yFunction;
+
+    try {
+
+        xFunction = new Function(
+            "lambda",
+            "phi",
+            preprocessProjectionCode(xCode.value)
+        );
+
+        yFunction = new Function(
+            "lambda",
+            "phi",
+            preprocessProjectionCode(yCode.value)
+        );
+
+    } catch (error) {
+
+        throw new Error(
+            "Projection code error:\n" +
+            error.message
+        );
+    }
+
+    return {
+        xFunction,
+        yFunction
+    };
+}
+
+// ============================================================
+// Evaluate projection safely
+// ============================================================
+
+function projectPoint(xFunction, yFunction, lambda, phi) {
+
+    let x;
+    let y;
+
+    try {
+
+        x = xFunction(lambda, phi);
+        y = yFunction(lambda, phi);
+
+    } catch {
+
+        return null;
+    }
+
+    if (
+        !Number.isFinite(x) ||
+        !Number.isFinite(y)
+    ) {
+        return null;
+    }
+
+    return { x, y };
+}
+
+
+// ============================================================
+// Build coarse projection sample
+// ============================================================
+
+function buildCoarseGrid(
+    xFunction,
+    yFunction
+) {
+
+    /*
+        This is intentionally modest.
+
+        181 × 91 = 16,471 projection evaluations.
+
+        That's tiny compared with evaluating the projection
+        hundreds of thousands of times unnecessarily.
+    */
+
+    const nx = Number(document.getElementById("coarseNx").value);
+    const ny = Math.ceil(nx/2)
+
+    const points = [];
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (let j = 0; j <= ny; j++) {
+
+        const phi =
+            Math.PI / 2 -
+            j * Math.PI / ny;
+
+        for (let i = 0; i <= nx; i++) {
+
+            const lambda =
+                -Math.PI +
+                i * 2 * Math.PI / nx;
+
+            const p =
+                projectPoint(
+                    xFunction,
+                    yFunction,
+                    lambda,
+                    phi
+                );
+
+            if (!p)
+                continue;
+
+            const point = {
+                x: p.x,
+                y: p.y,
+                lambda,
+                phi
+            };
+
+            points.push(point);
+
+            if (p.x < minX) minX = p.x;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.y > maxY) maxY = p.y;
+        }
+    }
+
+    if (!points.length) {
+
+        throw new Error(
+            "The projection produced no valid coordinates."
+        );
+    }
+
+    return {
+        points,
+        minX,
+        maxX,
+        minY,
+        maxY
+    };
+}
+
+
+// ============================================================
+// Spatial lookup for coarse inverse seeds
+// ============================================================
+
+function buildSpatialIndex(
+    points,
+    minX,
+    maxX,
+    minY,
+    maxY
+) {
+
+    /*
+        We use a small fixed grid.
+
+        This is NOT the renderer.
+
+        It merely answers:
+
+            "What nearby source coordinates should I
+             use as my initial Newton guess?"
+    */
+
+    const GRID_X = 64;
+    const GRID_Y = 64;
+
+    const bins =
+        new Array(GRID_X * GRID_Y);
+
+    for (let i = 0; i < bins.length; i++)
+        bins[i] = [];
+
+    const rangeX = maxX - minX;
+    const rangeY = maxY - minY;
+
+    function getBin(x, y) {
+
+        const bx = Math.floor(
+            (x - minX) /
+            rangeX *
+            GRID_X
+        );
+
+        const by = Math.floor(
+            (y - minY) /
+            rangeY *
+            GRID_Y
+        );
+
+        if (
+            bx < 0 ||
+            bx >= GRID_X ||
+            by < 0 ||
+            by >= GRID_Y
+        ) {
+            return null;
+        }
+
+        return by * GRID_X + bx;
+    }
+
+    for (const p of points) {
+
+        const index =
+            getBin(p.x, p.y);
+
+        if (index !== null)
+            bins[index].push(p);
+    }
+
+    return {
+        bins,
+        GRID_X,
+        GRID_Y,
+        minX,
+        maxX,
+        minY,
+        maxY,
+        rangeX,
+        rangeY
+    };
+}
+
+
+// ============================================================
+// Get an initial inverse guess
+// ============================================================
+
+function initialGuess(
+    px,
+    py,
+    spatial
+) {
+
+    const {
+        bins,
+        GRID_X,
+        GRID_Y,
+        minX,
+        maxX,
+        minY,
+        maxY,
+        rangeX,
+        rangeY
+    } = spatial;
+
+    const bx = Math.floor(
+        (px - minX) /
+        rangeX *
+        GRID_X
+    );
+
+    const by = Math.floor(
+        (py - minY) /
+        rangeY *
+        GRID_Y
+    );
+
+    let best = null;
+    let bestDistance = Infinity;
+
+    /*
+        Search nearby bins.
+
+        Usually the answer is in the center bin or one of
+        its immediate neighbors.
+    */
+
+for (let radius = 0; radius <= 3; radius++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            const x = bx + dx;
+            const y = by + dy;
+
+            if (
+                x < 0 ||
+                x >= GRID_X ||
+                y < 0 ||
+                y >= GRID_Y
+            ) {
+                continue;
+            }
+
+            const bin =
+                bins[y * GRID_X + x];
+
+            for (const p of bin) {
+                const dx2 =
+                    p.x - px;
+
+                const dy2 =
+                    p.y - py;
+
+                const distance =
+                    dx2 * dx2 +
+                    dy2 * dy2;
+
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    best = p;
+                }
+            }
+        }
+    }
+}
+
+    /*
+        Fallback.
+
+        This is useful for projections whose valid region
+        doesn't completely cover their bounding rectangle.
+    */
+
+if (!best) {
+    return {
+        lambda:
+            ((px - minX) / rangeX - 0.5)
+            * 2 * Math.PI,
+        phi:
+            (0.5 -
+             (py - minY) / rangeY)
+            * Math.PI
+    };
+}
+
+/*
+ * Do not use an exact pole as a Newton seed unless
+ * the target is actually at the pole's projected location.
+ *
+ * At a spherical pole, longitude is undefined and the
+ * projection Jacobian can be singular.
+ */
+const poleThreshold = 1e-6;
+
+if (
+    Math.abs(Math.abs(best.phi) - Math.PI / 2) < poleThreshold
+) {
+    const poleDistance = Math.hypot(
+        best.x - px,
+        best.y - py
+    );
+
+    if (poleDistance > 1e-8) {
+        return {
+            lambda: best.lambda,
+            phi:
+                best.phi > 0
+                    ? best.phi - 0.05
+                    : best.phi + 0.05
+        };
+    }
+}
+
+return {
+    lambda: best.lambda,
+    phi: best.phi
+};
+}
+
+
+// ============================================================
+// Newton-Raphson inverse projection
+// ============================================================
+
+function inverseProject(
+    xFunction,
+    yFunction,
+    targetX,
+    targetY,
+    guessLambda,
+    guessPhi
+) {
+
+    let lambda = guessLambda;
+    let phi = guessPhi;
+
+    /*
+        Newton iteration normally converges in only a few steps
+        for ordinary smooth projections.
+
+        We deliberately keep this low because this runs once
+        per output pixel.
+    */
+
+    const MAX_ITERATIONS = 8;
+
+    /*
+        Finite-difference step.
+
+        This is small enough to estimate the Jacobian accurately
+        without needing symbolic differentiation.
+    */
+
+    const H = 1e-5;
+
+    /*
+        Projection-coordinate tolerance.
+
+        The absolute number is intentionally scaled below by
+        the map dimensions.
+    */
+
+    for (
+        let iteration = 0;
+        iteration < MAX_ITERATIONS;
+        iteration++
+    ) {
+
+        const p =
+            projectPoint(
+                xFunction,
+                yFunction,
+                lambda,
+                phi
+            );
+
+        if (!p)
+            return null;
+
+        const fx =
+            p.x - targetX;
+
+        const fy =
+            p.y - targetY;
+
+        /*
+            If we're already close enough, stop.
+        */
+
+        if (
+            Math.abs(fx) < 1e-8 &&
+            Math.abs(fy) < 1e-8
+        ) {
+            return {
+                lambda,
+                phi
+            };
+        }
+
+
+        /*
+            Numerical Jacobian:
+
+                [ dx/dλ   dx/dφ ]
+                [ dy/dλ   dy/dφ ]
+        */
+
+        const pLambda =
+            projectPoint(
+                xFunction,
+                yFunction,
+                lambda + H,
+                phi
+            );
+
+        const pPhi =
+            projectPoint(
+                xFunction,
+                yFunction,
+                lambda,
+                phi + H
+            );
+
+        if (!pLambda || !pPhi)
+            return null;
+
+        const dxdl =
+            (pLambda.x - p.x) / H;
+
+        const dydl =
+            (pLambda.y - p.y) / H;
+
+        const dxdp =
+            (pPhi.x - p.x) / H;
+
+        const dydp =
+            (pPhi.y - p.y) / H;
+
+
+        /*
+            Invert the 2×2 Jacobian.
+
+                J⁻¹ =
+                  1/det [ dydφ  -dxdφ
+                         -dydλ   dxdλ ]
+        */
+
+        const determinant =
+            dxdl * dydp -
+            dxdp * dydl;
+
+        /*
+            Near a projection singularity, Newton becomes
+            numerically unstable.
+        */
+
+        if (
+            !Number.isFinite(determinant) ||
+            Math.abs(determinant) < 1e-12
+        ) {
+            return null;
+        }
+
+        const deltaLambda =
+            (
+                dydp * fx -
+                dxdp * fy
+            ) / determinant;
+
+        const deltaPhi =
+            (
+                -dydl * fx +
+                dxdl * fy
+            ) / determinant;
+
+
+        /*
+            Damping prevents a Newton step from launching
+            halfway across the globe.
+        */
+
+        let damping = 1;
+
+        const maximumStep =
+            Math.PI / 3;
+
+        const stepSize =
+            Math.max(
+                Math.abs(deltaLambda),
+                Math.abs(deltaPhi)
+            );
+
+        if (stepSize > maximumStep) {
+
+            damping =
+                maximumStep /
+                stepSize;
+        }
+
+        lambda -=
+            deltaLambda * damping;
+
+        phi -=
+            deltaPhi * damping;
+
+
+        /*
+            Keep latitude in the physically meaningful range.
+
+            We don't wrap latitude because crossing a pole is
+            not equivalent to ordinary longitude wrapping for
+            arbitrary user-defined projections.
+        */
+
+        if (
+            phi < -Math.PI / 2 - 0.01 ||
+            phi > Math.PI / 2 + 0.01
+        ) {
+            return null;
+        }
+
+        /*
+            Longitude wraps naturally.
+        */
+
+        while (lambda > Math.PI)
+            lambda -= 2 * Math.PI;
+
+        while (lambda < -Math.PI)
+            lambda += 2 * Math.PI;
+    }
+
+
+    /*
+        Final verification.
+
+        Don't accept a Newton result just because we ran out
+        of iterations.
+    */
+
+    const final =
+        projectPoint(
+            xFunction,
+            yFunction,
+            lambda,
+            phi
+        );
+
+    if (!final)
+        return null;
+
+    const error =
+        Math.hypot(
+            final.x - targetX,
+            final.y - targetY
+        );
+
+    /*
+        This tolerance is deliberately forgiving because
+        output pixels are finite-sized areas, not infinitely
+        precise mathematical points.
+    */
+
+    if (error > 1e-5)
+        return null;
+
+    return {
+        lambda,
+        phi
+    };
+}
+
+
+// ============================================================
+// Bilinear source-image sampling
+// ============================================================
+
+function makeSourceSampler(image) {
+
+    const sourceCanvas =
+        document.createElement("canvas");
+
+    sourceCanvas.width =
+        image.width;
+
+    sourceCanvas.height =
+        image.height;
+
+    const sourceCtx =
+        sourceCanvas.getContext("2d");
+
+    sourceCtx.drawImage(
+        image,
+        0,
+        0
+    );
+
+    const sourceData =
+        sourceCtx.getImageData(
+            0,
+            0,
+            image.width,
+            image.height
+        );
+
+    const data =
+        sourceData.data;
+
+    const width =
+        image.width;
+
+    const height =
+        image.height;
+
+
+    function getPixel(x, y, out) {
+
+        /*
+            Longitude wraps.
+
+            Latitude is clamped.
+        */
+
+        x =
+            ((x % width) + width) %
+            width;
+
+        y =
+            Math.max(
+                0,
+                Math.min(
+                    height - 1,
+                    y
+                )
+            );
+
+        const i =
+            (y * width + x) * 4;
+
+        out[0] = data[i];
+        out[1] = data[i + 1];
+        out[2] = data[i + 2];
+        out[3] = data[i + 3];
+    }
+
+
+    const a = new Uint8ClampedArray(4);
+    const b = new Uint8ClampedArray(4);
+    const c = new Uint8ClampedArray(4);
+    const d = new Uint8ClampedArray(4);
+
+
+    return function(lambda, phi, output) {
+
+        let u =
+            (lambda + Math.PI) /
+            (2 * Math.PI);
+
+        let v =
+            (Math.PI / 2 - phi) /
+            Math.PI;
+
+        /*
+            Wrap longitude.
+        */
+
+        u =
+            ((u % 1) + 1) % 1;
+
+        /*
+            Clamp latitude.
+        */
+
+        v =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    v
+                )
+            );
+
+
+        const sx =
+            u * (width - 1);
+
+        const sy =
+            v * (height - 1);
+
+        const x0 =
+            Math.floor(sx);
+
+        const y0 =
+            Math.floor(sy);
+
+        const x1 =
+            x0 + 1;
+
+        const y1 =
+            Math.min(
+                height - 1,
+                y0 + 1
+            );
+
+        const tx =
+            sx - x0;
+
+        const ty =
+            sy - y0;
+
+
+        getPixel(x0, y0, a);
+        getPixel(x1, y0, b);
+        getPixel(x0, y1, c);
+        getPixel(x1, y1, d);
+
+
+        for (let k = 0; k < 4; k++) {
+
+            output[k] =
+                a[k] * (1 - tx) * (1 - ty) +
+                b[k] * tx * (1 - ty) +
+                c[k] * (1 - tx) * ty +
+                d[k] * tx * ty;
+        }
+    };
+}
+
+
+// ============================================================
+// Main render
+// ============================================================
+
+async function render() {
+
+    if (rendering)
+        return;
+
+    if (!sourceImage) {
+
+        status.textContent =
+            "Load an equirectangular image first.";
+
+        return;
+    }
+
+    rendering = true;
+    renderButton.disabled = true;
+
+    try {
+
+        const {
+            xFunction,
+            yFunction
+        } = compileProjection();
+
+
+        // ----------------------------------------------------
+        // Projection bounds
+        // ----------------------------------------------------
+
+        status.textContent =
+            "Analyzing projection...";
+
+        await nextFrame();
+
+        const coarse =
+            buildCoarseGrid(
+                xFunction,
+                yFunction
+            );
+        projectionMinX = coarse.minX;
+projectionMaxX = coarse.maxX;
+projectionMinY = coarse.minY;
+projectionMaxY = coarse.maxY;
+
+        const rangeX =
+            coarse.maxX - coarse.minX;
+
+        const rangeY =
+            coarse.maxY - coarse.minY;
+
+        if (
+            !Number.isFinite(rangeX) ||
+            !Number.isFinite(rangeY) ||
+            rangeX <= 0 ||
+            rangeY <= 0
+        ) {
+            throw new Error(
+                "Projection has invalid bounds."
+            );
+        }
+
+
+        // ----------------------------------------------------
+        // Output size
+        // ----------------------------------------------------
+
+        const targetSize =
+            parseInt(
+                resolution.value,
+                10
+            );
+
+        let width;
+        let height;
+
+        if (rangeX >= rangeY) {
+
+            width =
+                targetSize;
+
+            height =
+                Math.max(
+                    1,
+                    Math.round(
+                        targetSize *
+                        rangeY /
+                        rangeX
+                    )
+                );
+
+        } else {
+
+            height =
+                targetSize;
+
+            width =
+                Math.max(
+                    1,
+                    Math.round(
+                        targetSize *
+                        rangeX /
+                        rangeY
+                    )
+                );
+        }
+
+
+        canvas.width =
+            width;
+
+        canvas.height =
+            height;
+
+
+        // ----------------------------------------------------
+        // Build inverse seed index
+        // ----------------------------------------------------
+
+        status.textContent =
+            "Building inverse lookup...";
+
+        await nextFrame();
+
+        const spatial =
+            buildSpatialIndex(
+                coarse.points,
+                coarse.minX,
+                coarse.maxX,
+                coarse.minY,
+                coarse.maxY
+            );
+
+
+        // ----------------------------------------------------
+        // Source image
+        // ----------------------------------------------------
+
+        const sampleSource =
+            makeSourceSampler(
+                sourceImage
+            );
+
+
+        const imageData =
+            ctx.createImageData(
+                width,
+                height
+            );
+
+        const output =
+            imageData.data;
+
+
+        // ----------------------------------------------------
+        // Render
+        // ----------------------------------------------------
+
+        /*
+            This is the important part.
+
+            There is NO loop over the source image.
+
+            Each output pixel performs:
+
+                1 coarse lookup
+                2 Newton iterations
+                3 source-image lookup
+
+            That's the whole renderer.
+        */
+
+        const totalPixels =
+            width * height;
+
+        const pixel =
+            new Uint8ClampedArray(4);
+
+
+        for (let py = 0; py < height; py++) {
+
+            const normalizedY =
+                py / (height - 1 || 1);
+
+            const targetY =
+                coarse.maxY -
+                normalizedY * rangeY;
+
+
+            for (let px = 0; px < width; px++) {
+
+                const normalizedX =
+                    px / (width - 1 || 1);
+
+                const targetX =
+                    coarse.minX +
+                    normalizedX * rangeX;
+
+
+                /*
+                    Get a coarse inverse estimate.
+                */
+
+                const guess =
+                    initialGuess(
+                        targetX,
+                        targetY,
+                        spatial
+                    );
+
+
+                /*
+                    Refine with Newton.
+                */
+
+                const inverse =
+                    inverseProject(
+                        xFunction,
+                        yFunction,
+                        targetX,
+                        targetY,
+                        guess.lambda,
+                        guess.phi
+                    );
+
+
+                if (!inverse)
+                    continue;
+
+
+                /*
+                    Sample the original map.
+                */
+
+                sampleSource(
+                    inverse.lambda,
+                    inverse.phi,
+                    pixel
+                );
+
+
+                const index =
+                    (py * width + px) * 4;
+
+                output[index] =
+                    pixel[0];
+
+                output[index + 1] =
+                    pixel[1];
+
+                output[index + 2] =
+                    pixel[2];
+
+                output[index + 3] =
+                    pixel[3];
+            }
+
+
+            /*
+                Yield periodically so the browser remains
+                responsive.
+            */
+
+            if (
+                py % 8 === 0 ||
+                py === height - 1
+            ) {
+
+                status.textContent =
+                    `Rendering... ` +
+                    `${Math.round(
+                        100 * (py + 1) / height
+                    )}%`;
+
+                await nextFrame();
+            }
+        }
+
+
+        ctx.putImageData(
+            imageData,
+            0,
+            0
+        );
+
+
+        // ----------------------------------------------------
+        // Overlays
+        // ----------------------------------------------------
+
+        if (graticule.checked) {
+
+            drawGraticule(
+                xFunction,
+                yFunction,
+                coarse
+            );
+        }
+
+        if (tissot.checked) {
+
+            drawTissot(
+                xFunction,
+                yFunction,
+                coarse
+            );
+        }
+
+
+        status.textContent =
+            `Done. ${width} × ${height}.`;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Error: " + error.message;
+
+    } finally {
+
+        rendering = false;
+        renderButton.disabled = false;
+    }
+}
+
+
+// ============================================================
+// Graticule
+// ============================================================
+
+function drawGraticule(
+    xFunction,
+    yFunction,
+    bounds
+) {
+
+    ctx.save();
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.35)";
+
+    ctx.lineWidth = 1;
+
+
+    function drawLine(points) {
+
+        ctx.beginPath();
+
+        let started = false;
+
+        let lastX = null;
+        let lastY = null;
+
+
+        for (const p of points) {
+
+            const projected =
+                projectPoint(
+                    xFunction,
+                    yFunction,
+                    p.lambda,
+                    p.phi
+                );
+
+            if (!projected) {
+
+                started = false;
+                continue;
+            }
+
+
+            const x =
+                (projected.x - bounds.minX) /
+                (bounds.maxX - bounds.minX) *
+                (canvas.width - 1);
+
+            const y =
+                (1 -
+                (projected.y - bounds.minY) /
+                (bounds.maxY - bounds.minY)) *
+                (canvas.height - 1);
+
+
+            /*
+                Don't draw giant lines across a projection
+                discontinuity.
+            */
+
+            if (
+                lastX !== null &&
+                Math.hypot(
+                    x - lastX,
+                    y - lastY
+                ) > canvas.width * 0.25
+            ) {
+
+                started = false;
+            }
+
+
+            if (!started) {
+
+                ctx.moveTo(x, y);
+                started = true;
+
+            } else {
+
+                ctx.lineTo(x, y);
+            }
+
+
+            lastX = x;
+            lastY = y;
+        }
+
+        ctx.stroke();
+    }
+
+    const res = Number(document.getElementById("ngraticule").value);
+    // Meridians
+
+    for (
+        let lon = -180;
+        lon <= 180.000000001;
+        lon += 90/res
+    ) {
+        const klon = Math.min(lon,180);
+        const points = [];
+
+        for (
+            let lat = -90;
+            lat <= 90;
+            lat += 1
+        ) {
+
+            points.push({
+                lambda:
+                    klon * Math.PI / 180,
+
+                phi:
+                    lat * Math.PI / 180
+            });
+        }
+
+        drawLine(points);
+    }
+
+
+    // Parallels
+
+    for (
+        let lat = -90;
+        lat <= 90.000000001;
+        lat += 90/res
+    ) {
+        const klat = Math.min(lat,90);
+        const points = [];
+
+        for (
+            let lon = -180;
+            lon <= 180;
+            lon += 1
+        ) {
+
+            points.push({
+                lambda:
+                    lon * Math.PI / 180,
+
+                phi:
+                    klat * Math.PI / 180
+            });
+        }
+
+        drawLine(points);
+    }
+
+
+    ctx.restore();
+}
+
+
+// ============================================================
+// Tissot-style circles
+// ============================================================
+
+function drawTissot(
+    xFunction,
+    yFunction,
+    bounds
+) {
+
+    ctx.save();
+
+    ctx.strokeStyle =
+        "rgba(255,0,0,0.65)";
+
+    ctx.lineWidth = 1;
+
+
+    /*
+        These are spherical circles of radius 2.5°.
+
+        They are deliberately NOT called exact Tissot
+        indicatrices because they are not computed from the
+        Jacobian.
+    */
+
+    const radius =
+        2.5 * Math.PI / 180;
+
+
+    for (
+        let lat = -75;
+        lat <= 75;
+        lat += 15
+    ) {
+
+        for (
+            let lon = -165;
+            lon <= 165;
+            lon += 15
+        ) {
+
+            const lambda0 =
+                lon * Math.PI / 180;
+
+            const phi0 =
+                lat * Math.PI / 180;
+
+            const points = [];
+
+
+            for (
+                let angle = 0;
+                angle <= Math.PI * 2;
+                angle += Math.PI / 40
+            ) {
+
+                const phi =
+                    Math.asin(
+                        Math.sin(phi0) *
+                        Math.cos(radius) +
+                        Math.cos(phi0) *
+                        Math.sin(radius) *
+                        Math.cos(angle)
+                    );
+
+
+                const lambda =
+                    lambda0 +
+                    Math.atan2(
+                        Math.sin(angle) *
+                        Math.sin(radius) *
+                        Math.cos(phi0),
+                        Math.cos(radius) -
+                        Math.sin(phi0) *
+                        Math.sin(phi)
+                    );
+
+
+                const projected =
+                    projectPoint(
+                        xFunction,
+                        yFunction,
+                        lambda,
+                        phi
+                    );
+
+                if (!projected)
+                    continue;
+
+
+                const x =
+                    (projected.x - bounds.minX) /
+                    (bounds.maxX - bounds.minX) *
+                    (canvas.width - 1);
+
+                const y =
+                    (1 -
+                    (projected.y - bounds.minY) /
+                    (bounds.maxY - bounds.minY)) *
+                    (canvas.height - 1);
+
+
+                points.push([x, y]);
+            }
+
+
+            ctx.beginPath();
+
+            for (
+                let i = 0;
+                i < points.length;
+                i++
+            ) {
+
+                const [x, y] =
+                    points[i];
+
+                if (i === 0)
+                    ctx.moveTo(x, y);
+                else
+                    ctx.lineTo(x, y);
+            }
+
+            ctx.stroke();
+        }
+    }
+
+
+    ctx.restore();
+}
+
+
+// ============================================================
+// Buttons
+// ============================================================
+
+renderButton.addEventListener(
+    "click",
+    render
+);
+
+
+saveButton.addEventListener(
+    "click",
+    () => {
+
+        if (!canvas.width)
+            return;
+
+        const link =
+            document.createElement("a");
+
+        link.download =
+            "projection.png";
+
+        link.href =
+            canvas.toDataURL(
+                "image/png"
+            );
+
+        link.click();
+    }
+);
+
+async function renderInverseToEquirectangular() {
+
+    if (rendering)
+        return;
+
+    if (!sourceImage) {
+
+        status.textContent =
+            "Load a projected image first.";
+
+        return;
+    }
+
+    rendering = true;
+
+    const inverseButton =
+        document.getElementById("renderInverseBtn");
+
+    renderButton.disabled = true;
+    inverseButton.disabled = true;
+
+    try {
+
+        // ----------------------------------------------------
+        // Compile projection
+        // ----------------------------------------------------
+
+        const {
+            xFunction,
+            yFunction
+        } = compileProjection();
+
+
+        // ----------------------------------------------------
+        // Determine projection bounds
+        // ----------------------------------------------------
+
+        /*
+            If the user has not rendered this projection yet,
+            calculate its bounds now.
+
+            This also makes reverse projection work when the
+            projected image was loaded from somewhere else.
+        */
+
+        status.textContent =
+        "Analyzing projection...";
+
+        await nextFrame();
+
+        const coarse =
+            buildCoarseGrid(
+                xFunction,
+                yFunction
+            );
+
+        projectionMinX = coarse.minX;
+        projectionMaxX = coarse.maxX;
+        projectionMinY = coarse.minY;
+        projectionMaxY = coarse.maxY;
+
+
+        const rangeX =
+            projectionMaxX -
+            projectionMinX;
+
+        const rangeY =
+            projectionMaxY -
+            projectionMinY;
+
+
+        if (
+            !Number.isFinite(rangeX) ||
+            !Number.isFinite(rangeY) ||
+            rangeX <= 0 ||
+            rangeY <= 0
+        ) {
+
+            throw new Error(
+                "Projection has invalid bounds."
+            );
+        }
+
+
+        // ----------------------------------------------------
+        // Output dimensions
+        // ----------------------------------------------------
+
+        /*
+            Equirectangular maps are always 2:1.
+        */
+
+        const width =
+            parseInt(
+                resolution.value,
+                10
+            );
+
+        const height =
+            Math.round(width / 2);
+
+
+        canvas.width = width;
+        canvas.height = height;
+
+
+        // ----------------------------------------------------
+        // Read projected source image
+        // ----------------------------------------------------
+
+        status.textContent =
+            "Reading projected image...";
+
+        await nextFrame();
+
+        const sourceCanvas =
+            document.createElement("canvas");
+
+        sourceCanvas.width =
+            sourceImage.width;
+
+        sourceCanvas.height =
+            sourceImage.height;
+
+        const sourceCtx =
+            sourceCanvas.getContext("2d");
+
+        sourceCtx.drawImage(
+            sourceImage,
+            0,
+            0
+        );
+
+        const sourceData =
+            sourceCtx.getImageData(
+                0,
+                0,
+                sourceImage.width,
+                sourceImage.height
+            );
+
+        const sourcePixels =
+            sourceData.data;
+
+        const sourceWidth =
+            sourceImage.width;
+
+        const sourceHeight =
+            sourceImage.height;
+
+
+        // ----------------------------------------------------
+        // Bilinear sampling of projected image
+        // ----------------------------------------------------
+
+        function sampleProjected(
+            x,
+            y,
+            output
+        ) {
+
+            /*
+                Convert projected coordinates to pixel
+                coordinates in the uploaded image.
+            */
+
+            const u =
+                (x - projectionMinX) /
+                rangeX;
+
+            const v =
+                1 -
+                (y - projectionMinY) /
+                rangeY;
+
+
+            /*
+                Outside the projected image.
+            */
+
+            if (
+                u < 0 ||
+                u > 1 ||
+                v < 0 ||
+                v > 1
+            ) {
+                return false;
+            }
+
+
+            const sx =
+                u * (sourceWidth - 1);
+
+            const sy =
+                v * (sourceHeight - 1);
+
+
+            const x0 =
+                Math.floor(sx);
+
+            const y0 =
+                Math.floor(sy);
+
+            const x1 =
+                Math.min(
+                    sourceWidth - 1,
+                    x0 + 1
+                );
+
+            const y1 =
+                Math.min(
+                    sourceHeight - 1,
+                    y0 + 1
+                );
+
+
+            const tx =
+                sx - x0;
+
+            const ty =
+                sy - y0;
+
+
+            function getPixel(
+                px,
+                py
+            ) {
+
+                const index =
+                    (py * sourceWidth + px) * 4;
+
+                return index;
+            }
+
+
+            const i00 =
+                getPixel(x0, y0);
+
+            const i10 =
+                getPixel(x1, y0);
+
+            const i01 =
+                getPixel(x0, y1);
+
+            const i11 =
+                getPixel(x1, y1);
+
+
+            for (let k = 0; k < 4; k++) {
+
+                const top =
+                    sourcePixels[i00 + k] *
+                    (1 - tx) +
+                    sourcePixels[i10 + k] *
+                    tx;
+
+                const bottom =
+                    sourcePixels[i01 + k] *
+                    (1 - tx) +
+                    sourcePixels[i11 + k] *
+                    tx;
+
+                output[k] =
+                    top * (1 - ty) +
+                    bottom * ty;
+            }
+
+
+            return true;
+        }
+
+
+        // ----------------------------------------------------
+        // Output image
+        // ----------------------------------------------------
+
+        const imageData =
+            ctx.createImageData(
+                width,
+                height
+            );
+
+        const output =
+            imageData.data;
+
+        const pixel =
+            new Uint8ClampedArray(4);
+
+
+        // ----------------------------------------------------
+        // Reverse projection
+        // ----------------------------------------------------
+
+        for (let py = 0; py < height; py++) {
+
+            /*
+                Equirectangular latitude.
+
+                Top    = +90°
+                Middle = 0°
+                Bottom = -90°
+            */
+
+            const phi =
+                Math.PI / 2 -
+                (py / (height - 1)) *
+                Math.PI;
+
+
+            for (let px = 0; px < width; px++) {
+
+                /*
+                    Equirectangular longitude.
+
+                    Left  = -180°
+                    Right = +180°
+                */
+
+                const lambda =
+                    -Math.PI +
+                    (px / (width - 1)) *
+                    Math.PI * 2;
+
+
+                let x;
+                let y;
+
+
+                // ------------------------------------------------
+                // Evaluate user's projection
+                // ------------------------------------------------
+
+                try {
+
+                    x =
+                        xFunction(
+                            lambda,
+                            phi
+                        );
+
+                    y =
+                        yFunction(
+                            lambda,
+                            phi
+                        );
+
+                } catch {
+
+                    continue;
+                }
+
+
+                /*
+                    Projection singularity / numerical explosion.
+                */
+
+                if (
+                    !Number.isFinite(x) ||
+                    !Number.isFinite(y) ||
+                    Math.abs(x) > 1e6 ||
+                    Math.abs(y) > 1e6
+                ) {
+                    continue;
+                }
+
+
+                // ------------------------------------------------
+                // Sample projected image
+                // ------------------------------------------------
+
+                if (
+                    !sampleProjected(
+                        x,
+                        y,
+                        pixel
+                    )
+                ) {
+                    continue;
+                }
+
+
+                const index =
+                    (py * width + px) * 4;
+
+
+                output[index] =
+                    pixel[0];
+
+                output[index + 1] =
+                    pixel[1];
+
+                output[index + 2] =
+                    pixel[2];
+
+                output[index + 3] =
+                    pixel[3];
+            }
+
+
+            // ----------------------------------------------------
+            // Keep browser responsive
+            // ----------------------------------------------------
+
+            if (
+                py % 8 === 0 ||
+                py === height - 1
+            ) {
+
+                status.textContent =
+                    `Reverse projecting... ` +
+                    `${Math.round(
+                        100 * (py + 1) / height
+                    )}%`;
+
+                await nextFrame();
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // Display
+        // ----------------------------------------------------
+
+        ctx.putImageData(
+            imageData,
+            0,
+            0
+        );
+
+
+        status.textContent =
+            `Done. Equirectangular ${width} × ${height}.`;
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Error: " + error.message;
+
+    } finally {
+
+        rendering = false;
+
+        renderButton.disabled = false;
+
+        inverseButton.disabled = false;
+    }
+}
+
+// ============================================================
+// Preset handling
+// ============================================================
+
+const presets = {
+
+    equirectangular: {
+        x: "return lambda;",
+        y: "return phi;"
+    },
+
+    mercator: {
+        x: "return lambda;",
+        y: `
+var kphi = max(min(phi, 1.4),-1.4);
+return log(tan(PI / 4 + kphi / 2));`
+    },
+
+    miller: {
+        x: "return lambda;",
+        y: "return 1.25 * log(tan(PI / 4 + 0.4 * phi));"
+    },
+
+    sinusoidal: {
+        x: "return lambda * cos(phi);",
+        y: "return phi;"
+    },
+
+    pseudoconformal: {
+        x: "return lambda;",
+        y: `
+return tan(phi/sqrt(2))*sqrt(2);
+// Shape distortion remains within a factor of 2 below 80 degrees and within a factor of 1.1 below 60 degrees`
+    },
+
+    pseudoequivalent: {
+        x: "return lambda;",
+        y: `
+return atan(phi/sqrt(2))*sqrt(2); 
+// Area distortion remains within a factor of 2 below 73 degrees and within a factor of 1.3 below 60 degrees`
+
+    },
+
+    equalearth: {
+        x: `
+const A1 = 1.340264;
+const A2 = -0.081106;
+const A3 = 0.000893;
+const A4 = 0.003796;
+
+const theta = asin(sqrt(3) / 2 * sin(phi));
+
+return (2 * sqrt(3) / 3) * lambda * cos(theta) /
+    (A1 + 3 * A2 * theta ** 2 +
+    theta ** 6 * (7 * A3 + 9 * A4 * theta ** 2));
+         `,
+         y: `
+const A1 = 1.340264;
+const A2 = -0.081106;
+const A3 = 0.000893;
+const A4 = 0.003796;
+
+const theta = asin(sqrt(3) / 2 * sin(phi));
+
+return theta * (
+    A1 +
+    A2 * theta ** 2 +
+    theta ** 6 * (A3 + A4 * theta ** 2)
+);
+    `
+    },
+
+    equalcylindrical: {
+         x: "return lambda;",
+        y: "return sin(phi)*PI/2;"
+    },
+
+    
+    majestaz: {
+         x: "return lambda;",
+        y: "return 0.994*(phi/(PI/2) + (8/15)*(phi/(PI/2))**3) * PI/2;"
+    },
+
+        mollweide: {
+         x: `
+const lambda0 = 0;
+
+let theta = phi;
+
+for (let i = 0; i < 10; i++) {
+    const f =
+        2 * theta +
+        sin(2 * theta) -
+        PI * sin(phi);
+
+    const df =
+        2 +
+        2 * cos(2 * theta);
+
+    theta -= f / df;
+}
+
+return (2 * sqrt(2) / PI) *
+    (lambda - lambda0) *
+    cos(theta);`,
+        y: `
+let theta = phi;
+
+for (let i = 0; i < 10; i++) {
+    const f =
+        2 * theta +
+        sin(2 * theta) -
+        PI * sin(phi);
+
+    const df =
+        2 +
+        2 * cos(2 * theta);
+
+    theta -= f / df;
+}
+
+return sqrt(2) * sin(theta);`
+    },
+
+azequidist: {
+    x: `
+const centerLongitude = 0;
+const centerLatitude = PI / 2;
+
+const dLambda = lambda - centerLongitude;
+
+const cosC =
+    sin(centerLatitude) * sin(phi) +
+    cos(centerLatitude) *
+    cos(phi) *
+    cos(dLambda);
+
+const c = acos(
+    max(-1, min(1, cosC))
+);
+
+if (c > PI / 1.98) {
+    return null;
+}
+
+if (c < 1e-10) {
+    return 0;
+}
+
+const k = c / sin(c);
+
+return k *
+    cos(phi) *
+    sin(dLambda);
+    `,
+
+    y: `
+const centerLongitude = 0;
+const centerLatitude = PI / 2;
+
+const dLambda = lambda - centerLongitude;
+
+const cosC =
+    sin(centerLatitude) * sin(phi) +
+    cos(centerLatitude) *
+    cos(phi) *
+    cos(dLambda);
+
+const c = acos(
+    max(-1, min(1, cosC))
+);
+
+if (c > PI / 1.98) {
+    return null;
+}
+
+if (c < 1e-10) {
+    return 0;
+}
+
+const k = c / sin(c);
+
+return k * (
+    cos(centerLatitude) * sin(phi) -
+    sin(centerLatitude) *
+    cos(phi) *
+    cos(dLambda)
+);
+    `
+},
+hammer: {
+    x: `
+const denominator = sqrt(
+    1 + cos(phi) * cos(lambda / 2)
+);
+
+return (
+    2 * sqrt(2) *
+    cos(phi) *
+    sin(lambda / 2)
+) / denominator;
+    `,
+
+    y: `
+const denominator = sqrt(
+    1 + cos(phi) * cos(lambda / 2)
+);
+
+return (
+    sqrt(2) *
+    sin(phi)
+) / denominator;
+    `
+},
+walker1: {
+    x: `
+let c = acos(cos(phi) * cos(lambda/2));
+let k = c / sin(c);
+
+return k * cos(phi) * sin(lambda/2) + lambda; // x
+`
+,y: `
+let c = acos(cos(phi) * cos(lambda/2));
+let k = c / sin(c);
+
+return k * sin(phi/2) * 3; // y
+`
+
+}
+
+,walker2: {
+    x: `
+return lambda*cos(phi*1.3)+lambda*2;
+`
+,y: `
+let k = lambda*cos(phi*1.3)+lambda*2;
+return (sin(phi/(1.15))*5)*((k**2)/600+0.9)
+
+`
+
+}
+
+,fpmw: {
+    x: `
+let z = sqrt(2);
+let k = sin(phi/z);
+return lambda*sqrt(1-(k/sin((PI/2)/z)) **2);
+`
+,y: `
+let z = sqrt(2);
+let k = PI/(2*sin((PI/2)/z))
+return sin(phi/z) * (k);
+
+// This projection stays close to Mollweide near the equator. I've called it 'Fast Pseudo-Mollweide' or FPMW for short.
+
+`
+}
+
+};
+
+preset.addEventListener("change", () => {
+
+    const selected = preset.value;
+
+    if (!selected)
+        return;
+
+    const projection = presets[selected];
+
+    xCode.value = projection.x;
+    yCode.value = projection.y;
+
+});
+
+function markCustom() {
+    preset.value = "";
+}
+
+xCode.addEventListener("input", markCustom);
+yCode.addEventListener("input", markCustom);
+
+
+// ============================================================
+// Initial state
+// ============================================================
+
+status.textContent =
+    "Load an equirectangular image to begin.";
+
+
+function nextFrame() {
+    return new Promise(resolve => {
+        requestAnimationFrame(resolve);
+    });
+}
+
+</script>
+
+</body>
+</html>
