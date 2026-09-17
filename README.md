@@ -6,12 +6,12 @@ The app supports javascript in the X and Y formula windows, and also supports no
 
 Options;
 
-* Output resolution: The maximum dimension of the it the output image.
-* Graticules: The density of graticules per 90 degree interval.
-* Solver quality: The resolution of the base grid the app uses to compute projections. Increase this if you're getting weird blank artifacts.
-* Preset: Various pre existing projections to choose from.
-* Show graticule: Show or hide the grid lines on the map.
-* Show distortion: Show or hide approximate Tissot's indicatrices that show the distortion in the map projection.
+* Output resolution, The maximum dimension of the it the output image.
+* Graticules, The density of graticules per 90 degree interval.
+* Solver quality, The resolution of the base grid the app uses to compute projections. Increase this if you're getting weird blank artifacts.
+* Preset, Various pre existing projections to choose from.
+* Show graticule, Show or hide the grid lines on the map.
+* Show distortion, Show or hide approximate Tissot's indicatrices that show the distortion in the map projection.
 
 
 I have included some idiosyncratic projections in the software. They are as follows;
