@@ -961,6 +961,9 @@ button:disabled {
     <input type="file" id="imageInput" accept="image/*">
 
     <button id="renderButton">Render</button>
+<button id="distortionButton">
+    Render distortion
+</button>
     <button id="saveButton">Export PNG</button>
     <button id="renderInverseBtn">Reverse projection</button>
 </div>
@@ -1038,6 +1041,8 @@ button:disabled {
         <option value="hammer">Hammer</option>
                         <option value="walker1">Walker I</option>
                  <option value="walker2">Walker II</option>
+                 <option value="frisk1">Frisk I</option>
+                 <option value="frisk2">Frisk II</option>
     </select>
 </label>
 
@@ -1052,6 +1057,8 @@ button:disabled {
     </label>
 
 </div>
+
+
 
 <div id="status"></div>
 
@@ -1094,6 +1101,7 @@ const ctx = canvas.getContext("2d");
 
 const imageInput = document.getElementById("imageInput");
 const renderButton = document.getElementById("renderButton");
+
 const saveButton = document.getElementById("saveButton");
 const resetButton = document.getElementById("resetButton");
 
@@ -3092,7 +3100,1094 @@ async function renderInverseToEquirectangular() {
         inverseButton.disabled = false;
     }
 }
+// ============================================================
+// Projection distortion renderer
+// ============================================================
 
+const distortionButton =
+    document.getElementById("distortionButton");
+
+distortionButton.addEventListener(
+    "click",
+    renderProjectionDistortion
+);
+
+
+// ------------------------------------------------------------
+// Calculate local projection distortion
+// ------------------------------------------------------------
+
+function projectionDistortion(
+    xFunction,
+    yFunction,
+    lambda,
+    phi
+) {
+    const H = 1e-5;
+
+    let p;
+    let pl;
+    let pp;
+
+    try {
+
+        p = projectPoint(
+            xFunction,
+            yFunction,
+            lambda,
+            phi
+        );
+
+        pl = projectPoint(
+            xFunction,
+            yFunction,
+            lambda + H,
+            phi
+        );
+
+        pp = projectPoint(
+            xFunction,
+            yFunction,
+            lambda,
+            phi + H
+        );
+
+    } catch {
+
+        return null;
+    }
+
+    if (!p || !pl || !pp)
+        return null;
+
+
+    // Jacobian
+
+    const dxdl =
+        (pl.x - p.x) / H;
+
+    const dydl =
+        (pl.y - p.y) / H;
+
+    const dxdp =
+        (pp.x - p.x) / H;
+
+    const dydp =
+        (pp.y - p.y) / H;
+
+
+    if (
+        !Number.isFinite(dxdl) ||
+        !Number.isFinite(dydl) ||
+        !Number.isFinite(dxdp) ||
+        !Number.isFinite(dydp)
+    ) {
+        return null;
+    }
+
+
+    // --------------------------------------------------------
+    // Area scale
+    //
+    // Sphere:
+    //
+    //     dA = cos(phi) dLambda dPhi
+    //
+    // Projection:
+    //
+    //     dA' = |det(J)| dLambda dPhi
+    //
+    // Therefore:
+    //
+    //     areaScale = |det(J)| / cos(phi)
+    // --------------------------------------------------------
+
+    const determinant =
+        dxdl * dydp -
+        dxdp * dydl;
+
+    const cosPhi =
+        Math.cos(phi);
+
+    let areaScale;
+
+    if (Math.abs(cosPhi) < 1e-10) {
+
+        areaScale = Infinity;
+
+    } else {
+
+        areaScale =
+            Math.abs(determinant) /
+            Math.abs(cosPhi);
+    }
+
+
+    // --------------------------------------------------------
+    // Shape scale
+    //
+    // Correct longitude for spherical distance.
+    //
+    // The physical tangent-plane Jacobian is:
+    //
+    //     [ dx/dlambda / cos(phi)   dx/dphi ]
+    //     [ dy/dlambda / cos(phi)   dy/dphi ]
+    //
+    // Its singular-value ratio gives the ellipse
+    // eccentricity/stretch ratio.
+    // --------------------------------------------------------
+
+    if (Math.abs(cosPhi) < 1e-10)
+        return {
+            area: areaScale,
+            shape: Infinity
+        };
+
+
+    const a =
+        dxdl / cosPhi;
+
+    const b =
+        dxdp;
+
+    const c =
+        dydl / cosPhi;
+
+    const d =
+        dydp;
+
+
+    // M^T M
+
+    const m11 =
+        a * a +
+        c * c;
+
+    const m12 =
+        a * b +
+        c * d;
+
+    const m22 =
+        b * b +
+        d * d;
+
+
+    const trace =
+        m11 + m22;
+
+    const determinantM =
+        m11 * m22 -
+        m12 * m12;
+
+    const discriminant =
+        Math.max(
+            0,
+            trace * trace -
+            4 * determinantM
+        );
+
+    const root =
+        Math.sqrt(discriminant);
+
+
+    const eigenMax =
+        (trace + root) / 2;
+
+    const eigenMin =
+        (trace - root) / 2;
+
+
+    if (
+        eigenMax < 0 ||
+        eigenMin <= 1e-20 ||
+        !Number.isFinite(eigenMax) ||
+        !Number.isFinite(eigenMin)
+    ) {
+        return {
+            area: areaScale,
+            shape: Infinity
+        };
+    }
+
+
+    const sigmaMax =
+        Math.sqrt(eigenMax);
+
+    const sigmaMin =
+        Math.sqrt(eigenMin);
+
+
+    return {
+        area: areaScale,
+        shape:
+            sigmaMax / sigmaMin
+    };
+}
+
+
+// ------------------------------------------------------------
+// Distortion → grayscale
+// ------------------------------------------------------------
+
+function areaGray(value) {
+
+    if (
+        !Number.isFinite(value) ||
+        value <= 0
+    ) {
+        return 0;
+    }
+
+    // Logarithmic scale.
+    //
+    // 1/16  -> 0
+    // 1     -> 128
+    // 16    -> 255
+
+    const gray =
+        ((64 +
+        64 * Math.log2(value))/256)**2*256;
+
+    return Math.max(
+        0,
+        Math.min(
+            255,
+            gray
+        )
+    );
+}
+
+
+function shapeGray(value) {
+
+    if (
+        !Number.isFinite(value) ||
+        value < 1
+    ) {
+        return 255;
+    }
+
+    // 1 = black
+    // 2 = 48
+    // 4 = 96
+    // 8 = 144
+    // 16 = 192
+    // 32 = 240
+
+    return Math.max(
+        0,
+        Math.min(
+            255,
+            48 * Math.log2(value)
+        )
+    );
+}
+
+
+// ------------------------------------------------------------
+// Render distortion
+// ------------------------------------------------------------
+
+async function renderProjectionDistortion() {
+
+    if (rendering)
+        return;
+
+    rendering = true;
+
+    const distortionButton =
+        document.getElementById("distortionButton");
+
+    if (distortionButton)
+        distortionButton.disabled = true;
+
+    try {
+
+        // ========================================================
+        // Compile projection
+        // ========================================================
+
+        status.textContent =
+            "Analyzing projection...";
+
+        await nextFrame();
+
+        const {
+            xFunction,
+            yFunction
+        } = compileProjection();
+
+
+        // ========================================================
+        // Determine projection bounds
+        // ========================================================
+
+        const coarse =
+            buildCoarseGrid(
+                xFunction,
+                yFunction
+            );
+
+        /*
+         * buildCoarseGrid returns the bounds.
+         *
+         * Keep the globals synchronized too, because other parts
+         * of the sandbox use them.
+         */
+
+        projectionMinX = coarse.minX;
+        projectionMaxX = coarse.maxX;
+        projectionMinY = coarse.minY;
+        projectionMaxY = coarse.maxY;
+
+
+        const rangeX =
+            projectionMaxX -
+            projectionMinX;
+
+        const rangeY =
+            projectionMaxY -
+            projectionMinY;
+                const mapScale =
+    Math.sqrt(
+        (rangeX * rangeY) /
+        (4 * Math.PI)
+    );
+
+        if (
+            !Number.isFinite(rangeX) ||
+            !Number.isFinite(rangeY) ||
+            rangeX <= 0 ||
+            rangeY <= 0
+        ) {
+            throw new Error(
+                "Projection has invalid bounds."
+            );
+        }
+
+
+        // ========================================================
+        // Build inverse spatial index ONCE
+        // ========================================================
+
+        status.textContent =
+            "Building inverse lookup...";
+
+        await nextFrame();
+
+        const spatial =
+            buildSpatialIndex(
+                coarse.points,
+                coarse.minX,
+                coarse.maxX,
+                coarse.minY,
+                coarse.maxY
+            );
+
+
+        // ========================================================
+        // Output dimensions
+        // ========================================================
+
+        const targetSize =
+            Math.max(
+                64,
+                Number(resolution.value) | 0
+            );
+
+
+        let width;
+        let height;
+
+
+        /*
+         * Preserve the actual aspect ratio of the projection.
+         */
+
+        if (rangeX >= rangeY) {
+
+            width =
+                targetSize;
+
+            height =
+                Math.max(
+                    1,
+                    Math.round(
+                        targetSize *
+                        rangeY /
+                        rangeX
+                    )
+                );
+
+        } else {
+
+            height =
+                targetSize;
+
+            width =
+                Math.max(
+                    1,
+                    Math.round(
+                        targetSize *
+                        rangeX /
+                        rangeY
+                    )
+                );
+        }
+
+
+        /*
+         * Two distortion maps side-by-side.
+         *
+         *   LEFT  = area distortion
+         *   RIGHT = shape distortion
+         */
+
+        const outputWidth =
+            width * 2;
+
+        canvas.width =
+            outputWidth;
+
+        canvas.height =
+            height;
+
+
+        const imageData =
+            ctx.createImageData(
+                outputWidth,
+                height
+            );
+
+        const data =
+            imageData.data;
+
+
+        // ========================================================
+        // Distortion settings
+        // ========================================================
+
+        /*
+         * THIS is the area-distortion contrast control.
+         *
+         * 32  = gentle
+         * 64  = strong
+         * 96  = very strong
+         * 128 = extreme
+         */
+
+        const areaContrast = 32;
+
+
+        /*
+         * Finite-difference step.
+         *
+         * This is in radians.
+         *
+         * Do NOT make this ridiculously tiny. 1e-5 is a good
+         * compromise between numerical precision and stability.
+         */
+
+        const H = 1e-5;
+
+
+        // ========================================================
+        // Local projection helper
+        // ========================================================
+
+        function project(
+            lambda,
+            phi
+        ) {
+
+            return projectPoint(
+                xFunction,
+                yFunction,
+                lambda,
+                phi
+            );
+        }
+
+
+        // ========================================================
+        // Calculate local distortion
+        // ========================================================
+
+        function getDistortion(
+            lambda,
+            phi
+        ) {
+
+            /*
+             * Longitude physically shrinks toward the poles.
+             */
+
+            const cosPhi =
+                Math.cos(phi);
+
+
+            if (
+                Math.abs(cosPhi) < 1e-8
+            ) {
+                return null;
+            }
+
+
+            /*
+             * Four neighboring projection evaluations.
+             *
+             * Central differences are substantially more accurate
+             * than one-sided differences here.
+             */
+
+            const left =
+                project(
+                    lambda - H,
+                    phi
+                );
+
+            const right =
+                project(
+                    lambda + H,
+                    phi
+                );
+
+            const down =
+                project(
+                    lambda,
+                    phi - H
+                );
+
+            const up =
+                project(
+                    lambda,
+                    phi + H
+                );
+
+
+            if (
+                !left ||
+                !right ||
+                !down ||
+                !up
+            ) {
+                return null;
+            }
+
+
+            // ----------------------------------------------------
+            // Jacobian
+            // ----------------------------------------------------
+
+const dxdl =
+    (right.x - left.x) /
+    (2 * H * mapScale);
+
+const dydl =
+    (right.y - left.y) /
+    (2 * H * mapScale);
+
+const dxdp =
+    (up.x - down.x) /
+    (2 * H * mapScale);
+
+const dydp =
+    (up.y - down.y) /
+    (2 * H * mapScale);
+
+
+            /*
+             * Area scale relative to the sphere.
+             *
+             * Sphere:
+             *
+             *     dA = cos(phi) dλ dφ
+             *
+             * Projection:
+             *
+             *     dA = |det(J)| dλ dφ
+             *
+             * Therefore:
+             *
+             *     areaScale =
+             *         |det(J)| / cos(phi)
+             */
+
+            const determinant =
+                dxdl * dydp -
+                dxdp * dydl;
+
+
+            const areaScale =
+                Math.abs(determinant) /
+                Math.abs(cosPhi);
+
+
+            if (
+                !Number.isFinite(areaScale)
+            ) {
+                return null;
+            }
+
+
+            // ----------------------------------------------------
+            // Shape distortion
+            // ----------------------------------------------------
+
+            /*
+             * Convert longitude derivative from radians to
+             * physical distance on the sphere.
+             */
+
+            const a =
+                dxdl / cosPhi;
+
+            const b =
+                dxdp;
+
+            const c =
+                dydl / cosPhi;
+
+            const d =
+                dydp;
+
+
+            /*
+             * MᵀM gives the squared singular values.
+             */
+
+            const A =
+                a * a +
+                c * c;
+
+            const B =
+                a * b +
+                c * d;
+
+            const D =
+                b * b +
+                d * d;
+
+
+            const trace =
+                A + D;
+
+            const determinantMetric =
+                A * D -
+                B * B;
+
+
+            const discriminant =
+                Math.max(
+                    0,
+                    trace * trace -
+                    4 * determinantMetric
+                );
+
+
+            const root =
+                Math.sqrt(
+                    discriminant
+                );
+
+
+            const eigenMax =
+                Math.max(
+                    0,
+                    (trace + root) * 0.5
+                );
+
+            const eigenMin =
+                Math.max(
+                    0,
+                    (trace - root) * 0.5
+                );
+
+
+            const sigmaMax =
+                Math.sqrt(
+                    eigenMax
+                );
+
+            const sigmaMin =
+                Math.sqrt(
+                    eigenMin
+                );
+
+
+            /*
+             * Ratio of maximum to minimum local scale.
+             *
+             * 1 = no shape distortion
+             * 2 = 2:1 stretching
+             * 4 = 4:1 stretching
+             */
+
+            const shapeScale =
+                sigmaMin > 1e-12
+                    ? sigmaMax / sigmaMin
+                    : Infinity;
+
+
+            return {
+                areaScale,
+                shapeScale
+            };
+        }
+
+
+        // ========================================================
+        // Grayscale mappings
+        // ========================================================
+
+        function areaGray(
+            scale
+        ) {
+
+            if (
+                !(scale > 0) ||
+                !Number.isFinite(scale)
+            ) {
+                return 0;
+            }
+
+
+            /*
+             * Logarithmic scale.
+             *
+             * 0.5× = 128 - contrast
+             * 1×   = 128
+             * 2×   = 128 + contrast
+             */
+
+            const value =
+                ((64 +
+                areaContrast *
+                Math.log2(scale))/256)**1*256;
+
+
+            return Math.max(
+                0,
+                Math.min(
+                    255,
+                    value
+                )
+            );
+        }
+
+
+        function shapeGray(
+            scale
+        ) {
+
+            if (
+                scale === Infinity
+            ) {
+                return 255;
+            }
+
+
+            if (
+                !(scale >= 1) ||
+                !Number.isFinite(scale)
+            ) {
+                return 0;
+            }
+
+
+            /*
+             * 1:1  = 0
+             * 2:1  = 64
+             * 4:1  = 128
+             * 8:1  = 192
+             * 16:1 = 255
+             */
+
+            const value =
+                64 *
+                Math.log2(scale);
+
+
+            return Math.max(
+                0,
+                Math.min(
+                    255,
+                    value
+                )
+            );
+        }
+
+
+        // ========================================================
+        // Pixel loop
+        // ========================================================
+
+        for (
+            let py = 0;
+            py < height;
+            py++
+        ) {
+
+            /*
+             * Projection-space Y.
+             *
+             * Canvas Y increases downward, so reverse it.
+             */
+
+            const fy =
+                py /
+                Math.max(
+                    1,
+                    height - 1
+                );
+
+
+            const targetY =
+                projectionMaxY -
+                fy * rangeY;
+
+
+            for (
+                let px = 0;
+                px < width;
+                px++
+            ) {
+
+                const fx =
+                    px /
+                    Math.max(
+                        1,
+                        width - 1
+                    );
+
+
+                const targetX =
+                    projectionMinX +
+                    fx * rangeX;
+
+
+                // ------------------------------------------------
+                // Find initial inverse guess
+                // ------------------------------------------------
+
+                const guess =
+                    initialGuess(
+                        targetX,
+                        targetY,
+                        spatial
+                    );
+
+
+                // ------------------------------------------------
+                // Invert projection
+                // ------------------------------------------------
+
+                const inverse =
+                    inverseProject(
+                        xFunction,
+                        yFunction,
+                        targetX,
+                        targetY,
+                        guess.lambda,
+                        guess.phi
+                    );
+
+
+                /*
+                 * No inverse solution means this pixel is outside
+                 * the actual projected region.
+                 *
+                 * This is the "dead area".
+                 */
+
+                if (!inverse) {
+
+                    continue;
+                }
+
+
+                // ------------------------------------------------
+                // Calculate distortion
+                // ------------------------------------------------
+
+                const distortion =
+                    getDistortion(
+                        inverse.lambda,
+                        inverse.phi
+                    );
+
+
+                if (!distortion) {
+
+                    continue;
+                }
+
+
+                const area =
+                    areaGray(
+                        distortion.areaScale
+                    );
+
+                const shape =
+                    shapeGray(
+                        distortion.shapeScale
+                    );
+
+
+                // ------------------------------------------------
+                // LEFT: area distortion
+                // ------------------------------------------------
+
+                const areaIndex =
+                    (
+                        py *
+                        outputWidth +
+                        px
+                    ) * 4;
+
+
+                data[areaIndex] =
+                    area;
+
+                data[areaIndex + 1] =
+                    area;
+
+                data[areaIndex + 2] =
+                    area;
+
+                data[areaIndex + 3] =
+                    255;
+
+
+                // ------------------------------------------------
+                // RIGHT: shape distortion
+                // ------------------------------------------------
+
+                const shapeIndex =
+                    (
+                        py *
+                        outputWidth +
+                        px +
+                        width
+                    ) * 4;
+
+
+                data[shapeIndex] =
+                    shape;
+
+                data[shapeIndex + 1] =
+                    shape;
+
+                data[shapeIndex + 2] =
+                    shape;
+
+                data[shapeIndex + 3] =
+                    255;
+            }
+
+
+            /*
+             * Don't make the browser wait until the entire
+             * projection is finished before repainting.
+             */
+
+            if (
+                (py & 7) === 7 ||
+                py === height - 1
+            ) {
+
+                status.textContent =
+                    `Rendering distortion: ` +
+                    `${Math.round(
+                        100 *
+                        (py + 1) /
+                        height
+                    )}%`;
+
+                await nextFrame();
+            }
+        }
+
+
+        // ========================================================
+        // Display
+        // ========================================================
+
+        ctx.putImageData(
+            imageData,
+            0,
+            0
+        );
+
+       if (graticule.checked) {
+    drawGraticule(
+        xFunction,
+        yFunction,
+        {
+            minX: projectionMinX,
+            maxX: projectionMinX+(projectionMaxX-projectionMinX)*2,
+            minY: projectionMinY,
+            maxY: projectionMaxY
+        }
+    );
+        drawGraticule(
+        xFunction,
+        yFunction,
+        {
+            minX: projectionMaxX-(projectionMaxX-projectionMinX)*2,
+            maxX: projectionMaxX,
+            minY: projectionMinY,
+            maxY: projectionMaxY
+        }
+    );
+}
+
+
+        // --------------------------------------------------------
+        // Labels
+        // --------------------------------------------------------
+
+        ctx.save();
+
+        ctx.fillStyle =
+            "rgba(255,255,255,0.8)";
+
+        ctx.font =
+            "14px sans-serif";
+
+        ctx.fillText(
+            "Area distortion",
+            10,
+            20
+        );
+
+        ctx.fillText(
+            "Shape distortion",
+            width + 10,
+            20
+        );
+
+        ctx.restore();
+
+
+        status.textContent =
+            `Done. ${width} × ${height} distortion maps.`;
+
+    } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Error: " + error.message;
+
+    } finally {
+
+        rendering = false;
+
+        if (distortionButton)
+            distortionButton.disabled = false;
+    }
+}
 // ============================================================
 // Preset handling
 // ============================================================
@@ -3350,7 +4445,76 @@ return sin(phi/z) * (k);
 
 `
 }
-
+,
+frisk1: {
+    x:
+`
+lambda += 0.59
+dist = (PI / 2.0 - phi);
+k = floor(dist / PI * 5.0);
+q = 2.0 ** k;
+q2 = 1.0;
+h2 = 0.0;
+for(i = 1; i <= k; i++) {
+     dist2 = i / 5.0 * PI;
+     q2 *= 2.0;
+     h2 += ((abs(floor(lambda / PI / 2.0 * q2)) % 2) - 0.5) / q2 * sin(dist2) / dist2 * PI * 2.0;
+}
+h = (floor(lambda / PI * q / 2.0) + 0.5) * PI / q * 2.0;
+return sin((lambda - h) * sin(dist) / dist + h2) * dist;
+`
+,y:`
+lambda += 0.59
+dist = (PI / 2.0 - phi);
+k = floor(dist / PI * 5.0);
+q = 2.0 ** k;
+q2 = 1.0;
+h2 = 0.0;
+for(i = 1; i <= k; i++) {
+     dist2 = i / 5.0 * PI;
+     q2 *= 2.0;
+     h2 += ((abs(floor(lambda / PI / 2.0 * q2)) % 2) - 0.5) / q2 * sin(dist2) / dist2 * PI * 2.0;
+}
+h = (floor(lambda / PI * q / 2.0) + 0.5) * PI / q * 2.0;
+return -cos((lambda - h) * sin(dist) / dist + h2) * dist;
+`
+}
+,
+frisk2: {
+    x:
+`
+lambda += 0.45;
+dist = (PI / 2.0 - phi);
+k = floor(dist / PI * 4.0);
+k = min(k,2);
+q = 2.0 ** k;
+q2 = 1.0;
+h2 = 0.0;
+for(i = 1; i <= k; i++) {
+     dist2 = i / 4.0 * PI;
+     q2 *= 2.0;
+     h2 += ((abs(floor(lambda / PI / 2.0 * q2)) % 2) - 0.5) / q2 * sin(dist2) / dist2 * PI * 2.0;
+}
+h = (floor(lambda / PI * q / 2.0) + 0.5) * PI / q * 2.0;
+return sin((lambda - h) * sin(dist) / dist + h2) * dist;
+`
+,y:`
+lambda += 0.45;
+dist = (PI / 2.0 - phi);
+k = floor(dist / PI * 4.0);
+k = min(k,2);
+q = 2.0 ** k;
+q2 = 1.0;
+h2 = 0.0;
+for(i = 1; i <= k; i++) {
+     dist2 = i / 4.0 * PI;
+     q2 *= 2.0;
+     h2 += ((abs(floor(lambda / PI / 2.0 * q2)) % 2) - 0.5) / q2 * sin(dist2) / dist2 * PI * 2.0;
+}
+h = (floor(lambda / PI * q / 2.0) + 0.5) * PI / q * 2.0;
+return -cos((lambda - h) * sin(dist) / dist + h2) * dist;
+`
+}
 };
 
 preset.addEventListener("change", () => {
