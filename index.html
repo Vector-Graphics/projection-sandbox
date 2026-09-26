@@ -1057,8 +1057,30 @@ button:disabled {
     </label>
 
 </div>
+<div class="hint">PADDING - The app uses an approximation to determine the bounds of the projection image. Sometimes that approximation can clip off sections of the map, this is intended to correct for that.</div>
+<div class="options">
+    <label>
+    Top&nbsp;
+    <input type="number" id="paddingTop" value="0" min="0" max="100" step="1">
+    </label>
 
+    <label>
+    &nbsp;&nbsp;Bottom&nbsp;
+    <input type="number" id="paddingBottom" value="0" min="0" max="100" step="1">
+    </label>
 
+        <label>
+    &nbsp;&nbsp;Left&nbsp;
+    <input type="number" id="paddingLeft" value="0" min="0" max="100" step="1">
+    </label>
+
+            <label>
+    &nbsp;&nbsp;Right&nbsp;
+    <input type="number" id="paddingRight" value="0" min="0" max="100" step="1">
+    </label>
+
+    
+</div>
 
 <div id="status"></div>
 
@@ -2003,7 +2025,94 @@ function makeSourceSampler(image) {
 // ============================================================
 // Main render
 // ============================================================
+// ============================================================
+// Map padding
+// ============================================================
 
+function getPadding() {
+
+    return {
+        top: Math.max(
+            0,
+            Number(document.getElementById("paddingTop").value) || 0
+        ),
+
+        right: Math.max(
+            0,
+            Number(document.getElementById("paddingRight").value) || 0
+        ),
+
+        bottom: Math.max(
+            0,
+            Number(document.getElementById("paddingBottom").value) || 0
+        ),
+
+        left: Math.max(
+            0,
+            Number(document.getElementById("paddingLeft").value) || 0
+        )
+    };
+}
+
+
+// ------------------------------------------------------------
+// Expand projection bounds by pixel padding.
+//
+// The padding is measured in pixels at the ORIGINAL map scale,
+// so the actual projection bounds do not get rescaled.
+// ------------------------------------------------------------
+
+function expandProjectionBounds(
+    minX,
+    maxX,
+    minY,
+    maxY,
+    baseWidth,
+    baseHeight,
+    padding
+) {
+
+    const rangeX =
+        maxX - minX;
+
+    const rangeY =
+        maxY - minY;
+
+
+    /*
+        Pixel spacing of the automatically generated map.
+
+        Using (width - 1) is important because the first and
+        last pixels lie exactly on the two bounds.
+    */
+
+    const pixelSizeX =
+        rangeX /
+        Math.max(1, baseWidth - 1);
+
+    const pixelSizeY =
+        rangeY /
+        Math.max(1, baseHeight - 1);
+
+
+    return {
+        minX:
+            minX -
+            padding.left * pixelSizeX,
+
+        maxX:
+            maxX +
+            padding.right * pixelSizeX,
+
+        minY:
+            minY -
+            padding.bottom * pixelSizeY,
+
+        maxY:
+            maxY +
+            padding.top * pixelSizeY
+    };
+}
 async function render() {
 
     if (rendering)
@@ -2066,7 +2175,7 @@ projectionMaxY = coarse.maxY;
 
 
         // ----------------------------------------------------
-        // Output size
+        // Output size + padding
         // ----------------------------------------------------
 
         const targetSize =
@@ -2075,15 +2184,18 @@ projectionMaxY = coarse.maxY;
                 10
             );
 
-        let width;
-        let height;
+        const padding =
+            getPadding();
+
+        let baseWidth;
+        let baseHeight;
 
         if (rangeX >= rangeY) {
 
-            width =
+            baseWidth =
                 targetSize;
 
-            height =
+            baseHeight =
                 Math.max(
                     1,
                     Math.round(
@@ -2095,10 +2207,10 @@ projectionMaxY = coarse.maxY;
 
         } else {
 
-            height =
+            baseHeight =
                 targetSize;
 
-            width =
+            baseWidth =
                 Math.max(
                     1,
                     Math.round(
@@ -2110,11 +2222,67 @@ projectionMaxY = coarse.maxY;
         }
 
 
+        /*
+            Expand the projection bounds by the requested
+            number of pixels, while preserving the original
+            pixel scale.
+        */
+
+        const paddedBounds =
+            expandProjectionBounds(
+                coarse.minX,
+                coarse.maxX,
+                coarse.minY,
+                coarse.maxY,
+                baseWidth,
+                baseHeight,
+                padding
+            );
+
+
+        projectionMinX =
+            paddedBounds.minX;
+
+        projectionMaxX =
+            paddedBounds.maxX;
+
+        projectionMinY =
+            paddedBounds.minY;
+
+        projectionMaxY =
+            paddedBounds.maxY;
+
+
+        width =
+            baseWidth +
+            padding.left +
+            padding.right;
+
+        height =
+            baseHeight +
+            padding.top +
+            padding.bottom;
+
+
         canvas.width =
             width;
 
         canvas.height =
             height;
+
+
+        /*
+            Everything below this point uses the padded
+            projection bounds.
+        */
+
+        const paddedRangeX =
+            projectionMaxX -
+            projectionMinX;
+
+        const paddedRangeY =
+            projectionMaxY -
+            projectionMinY;
 
 
         // ----------------------------------------------------
@@ -2186,9 +2354,10 @@ projectionMaxY = coarse.maxY;
             const normalizedY =
                 py / (height - 1 || 1);
 
-            const targetY =
-                coarse.maxY -
-                normalizedY * rangeY;
+   const targetY =
+                projectionMaxY -
+                normalizedY *
+                (projectionMaxY - projectionMinY);
 
 
             for (let px = 0; px < width; px++) {
@@ -2196,9 +2365,10 @@ projectionMaxY = coarse.maxY;
                 const normalizedX =
                     px / (width - 1 || 1);
 
-                const targetX =
-                    coarse.minX +
-                    normalizedX * rangeX;
+                              const targetX =
+                    projectionMinX +
+                    normalizedX *
+                    (projectionMaxX - projectionMinX);
 
 
                 /*
@@ -2294,20 +2464,30 @@ projectionMaxY = coarse.maxY;
 
         if (graticule.checked) {
 
-            drawGraticule(
-                xFunction,
-                yFunction,
-                coarse
-            );
+    drawGraticule(
+        xFunction,
+        yFunction,
+        {
+            minX: projectionMinX,
+            maxX: projectionMaxX,
+            minY: projectionMinY,
+            maxY: projectionMaxY
+        }
+    );
         }
 
         if (tissot.checked) {
 
-            drawTissot(
-                xFunction,
-                yFunction,
-                coarse
-            );
+    drawTissot(
+        xFunction,
+        yFunction,
+        {
+            minX: projectionMinX,
+            maxX: projectionMaxX,
+            minY: projectionMinY,
+            maxY: projectionMaxY
+        }
+    );
         }
 
 
@@ -2734,7 +2914,7 @@ async function renderInverseToEquirectangular() {
         }
 
 
-        // ----------------------------------------------------
+  // ----------------------------------------------------
         // Output dimensions
         // ----------------------------------------------------
 
@@ -2752,9 +2932,80 @@ async function renderInverseToEquirectangular() {
             Math.round(width / 2);
 
 
-        canvas.width = width;
-        canvas.height = height;
+        canvas.width =
+            width;
 
+        canvas.height =
+            height;
+
+
+        // ----------------------------------------------------
+        // Padding
+        // ----------------------------------------------------
+
+        const padding =
+            getPadding();
+
+
+        /*
+            The uploaded projected image includes the padding.
+
+            The non-padded portion therefore has:
+
+                sourceWidth  - left - right
+                sourceHeight - top - bottom
+
+            pixels.
+
+            Use those dimensions to recover the pixel scale
+            of the original automatically-generated bounds.
+        */
+
+        const contentWidth =
+            Math.max(
+                2,
+                sourceImage.width -
+                padding.left -
+                padding.right
+            );
+
+        const contentHeight =
+            Math.max(
+                2,
+                sourceImage.height -
+                padding.top -
+                padding.bottom
+            );
+
+
+        /*
+            Expand the automatically detected projection bounds
+            by exactly the requested number of pixels.
+        */
+
+        const paddedBounds =
+            expandProjectionBounds(
+                coarse.minX,
+                coarse.maxX,
+                coarse.minY,
+                coarse.maxY,
+                contentWidth,
+                contentHeight,
+                padding
+            );
+
+
+        projectionMinX =
+            paddedBounds.minX;
+
+        projectionMaxX =
+            paddedBounds.maxX;
+
+        projectionMinY =
+            paddedBounds.minY;
+
+        projectionMaxY =
+            paddedBounds.maxY;
 
         // ----------------------------------------------------
         // Read projected source image
@@ -2817,13 +3068,13 @@ async function renderInverseToEquirectangular() {
             */
 
             const u =
-                (x - projectionMinX) /
-                rangeX;
+    (x - projectionMinX) /
+    (projectionMaxX - projectionMinX);
 
-            const v =
-                1 -
-                (y - projectionMinY) /
-                rangeY;
+const v =
+    1 -
+    (y - projectionMinY) /
+    (projectionMaxY - projectionMinY);
 
 
             /*
@@ -3500,16 +3751,19 @@ async function renderProjectionDistortion() {
         let height;
 
 
-        /*
+    /*
          * Preserve the actual aspect ratio of the projection.
          */
 
+        let baseWidth;
+        let baseHeight;
+
         if (rangeX >= rangeY) {
 
-            width =
+            baseWidth =
                 targetSize;
 
-            height =
+            baseHeight =
                 Math.max(
                     1,
                     Math.round(
@@ -3521,10 +3775,10 @@ async function renderProjectionDistortion() {
 
         } else {
 
-            height =
+            baseHeight =
                 targetSize;
 
-            width =
+            baseWidth =
                 Math.max(
                     1,
                     Math.round(
@@ -3534,6 +3788,50 @@ async function renderProjectionDistortion() {
                     )
                 );
         }
+
+
+        // ----------------------------------------------------
+        // Padding
+        // ----------------------------------------------------
+
+        const padding =
+            getPadding();
+
+
+        const paddedBounds =
+            expandProjectionBounds(
+                coarse.minX,
+                coarse.maxX,
+                coarse.minY,
+                coarse.maxY,
+                baseWidth,
+                baseHeight,
+                padding
+            );
+
+
+        projectionMinX =
+            paddedBounds.minX;
+
+        projectionMaxX =
+            paddedBounds.maxX;
+
+        projectionMinY =
+            paddedBounds.minY;
+
+        projectionMaxY =
+            paddedBounds.maxY;
+
+
+        width =
+            baseWidth +
+            padding.left +
+            padding.right;
+
+        height =
+            baseHeight +
+            padding.top +
+            padding.bottom;
 
 
         /*
@@ -3942,9 +4240,10 @@ const dydp =
                 );
 
 
-            const targetY =
+                        const targetY =
                 projectionMaxY -
-                fy * rangeY;
+                fy *
+                (projectionMaxY - projectionMinY);
 
 
             for (
@@ -3963,8 +4262,8 @@ const dydp =
 
                 const targetX =
                     projectionMinX +
-                    fx * rangeX;
-
+                    fx *
+                    (projectionMaxX - projectionMinX);
 
                 // ------------------------------------------------
                 // Find initial inverse guess
@@ -4119,27 +4418,40 @@ const dydp =
             0
         );
 
-       if (graticule.checked) {
+if (graticule.checked) {
+
     drawGraticule(
         xFunction,
         yFunction,
         {
             minX: projectionMinX,
-            maxX: projectionMinX+(projectionMaxX-projectionMinX)*2,
-            minY: projectionMinY,
-            maxY: projectionMaxY
-        }
-    );
-        drawGraticule(
-        xFunction,
-        yFunction,
-        {
-            minX: projectionMaxX-(projectionMaxX-projectionMinX)*2,
             maxX: projectionMaxX,
             minY: projectionMinY,
             maxY: projectionMaxY
         }
     );
+
+    /*
+        Draw the same graticule on the right-hand map.
+        Shift its canvas coordinates by `width`.
+    */
+
+    ctx.save();
+
+    ctx.translate(width, 0);
+
+    drawGraticule(
+        xFunction,
+        yFunction,
+        {
+            minX: projectionMinX,
+            maxX: projectionMaxX,
+            minY: projectionMinY,
+            maxY: projectionMaxY
+        }
+    );
+
+    ctx.restore();
 }
 
 
