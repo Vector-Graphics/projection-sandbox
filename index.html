@@ -4425,7 +4425,7 @@ if (graticule.checked) {
         yFunction,
         {
             minX: projectionMinX,
-            maxX: projectionMaxX,
+            maxX: projectionMinX+(projectionMaxX-projectionMinX)*2,
             minY: projectionMinY,
             maxY: projectionMaxY
         }
@@ -4445,7 +4445,7 @@ if (graticule.checked) {
         yFunction,
         {
             minX: projectionMinX,
-            maxX: projectionMaxX,
+            maxX: projectionMinX+(projectionMaxX-projectionMinX)*2,
             minY: projectionMinY,
             maxY: projectionMaxY
         }
